@@ -1,0 +1,77 @@
+# <type>(<scope>): <subject>
+# |<----  Using a Maximum Of 50 Characters  ---->|
+
+# Explain why this change is being made
+# |<----   Try To Limit Each Line to a Maximum Of 72 Characters   ---->|
+
+# Provide links or keys to any relevant tickets, articles or other resources
+# Example: Fixes #23
+
+# --- COMMIT END ---
+# Type can be:
+#    feat     (new feature)
+#    fix      (bug fix)
+#    refactor (refactoring production code)
+#    style    (formatting, missing semi colons, etc; no code change)
+#    docs     (changes to documentation)
+#    test     (adding or refactoring tests; no production code change)
+#    chore    (updating grunt tasks etc; no production code change)
+#    perf     (performance improvements)
+#    ci       (changes to CI configuration files and scripts)
+#    build    (changes to build system or dependencies)
+#    revert   (reverts a previous commit)
+#    migrate  (database migrations)
+# --------------------
+# Scope is optional and can be anything specifying the place of the commit change.
+# Examples: api, auth, users, database, cache, models, schemas, tests, docs
+# --------------------
+# Subject line should:
+#    * use the imperative, present tense: "change" not "changed" nor "changes"
+#    * not capitalize the first letter
+#    * not end with a period
+# --------------------
+# Body should:
+#    * use the imperative, present tense: "change" not "changed" nor "changes"
+#    * include motivation for the change and contrast with previous behavior
+# --------------------
+# Footer should contain any information about Breaking Changes and reference
+# GitHub issues that this commit closes
+# --------------------
+# Breaking Changes should start with the word BREAKING CHANGE: with a space
+# or two newlines. The rest of the commit message is then used for this.
+# --------------------
+# Examples:
+#
+# feat(auth): add JWT token refresh endpoint
+#
+# Implement token refresh mechanism to allow users to obtain
+# new access tokens without re-authenticating.
+#
+# Fixes #42
+#
+# --------------------
+#
+# fix(database): resolve connection pool exhaustion
+#
+# Increase max pool size from 10 to 50 and add connection
+# recycling to prevent pool exhaustion under high load.
+#
+# Fixes #128
+#
+# --------------------
+#
+# migrate(users): add email verification column
+#
+# Add is_email_verified boolean column to users table
+# to support email verification feature.
+#
+# Related to #156
+#
+# --------------------
+#
+# perf(cache): implement Redis caching for user queries
+#
+# Add Redis caching layer for frequently accessed user data
+# to reduce database load and improve response times.
+#
+# Reduces average response time from 200ms to 50ms.
