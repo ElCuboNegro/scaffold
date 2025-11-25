@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      {% if cookiecutter.use_postgresql == "yes" -%}
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      {% endif %}
+
+      {% if cookiecutter.use_redis == "yes" -%}
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      {% endif %}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '{{ cookiecutter.python_version }}'
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        poetry install --no-interaction --no-ansi
+
+    - name: Lint with ruff
+      run: |
+        poetry run ruff check .
+
+    - name: Type check with mypy
+      run: |
+        poetry run mypy app
+
+    - name: Security check with bandit
+      run: |
+        poetry run bandit -r app
+
+    - name: Run unit tests
+      run: |
+        poetry run pytest --cov=app --cov-report=xml --cov-report=term
+      env:
+        {% if cookiecutter.use_postgresql == "yes" -%}
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        {% endif -%}
+        {% if cookiecutter.use_redis == "yes" -%}
+        REDIS_URL: redis://localhost:6379/0
+        {% endif -%}
+        CELERY_TASK_ALWAYS_EAGER: true
+
+    - name: Run BDD tests
+      run: |
+        poetry run behave
+      env:
+        {% if cookiecutter.use_postgresql == "yes" -%}
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        {% endif -%}
+        CELERY_TASK_ALWAYS_EAGER: true
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
