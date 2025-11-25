@@ -1,4 +1,4 @@
-# {{ cookiecutter.project_name }} - Cookiecutter Scaffold
+# {{ cookiecutter.project_name }}
 
 A production-ready cookiecutter template for building BDD-tested REST APIs with FastAPI, Celery, and modern Python tooling.
 
