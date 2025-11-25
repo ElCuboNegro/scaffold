@@ -5,6 +5,7 @@ description = "{{ cookiecutter.project_description }}"
 authors = ["{{ cookiecutter.author_name }} <{{ cookiecutter.author_email }}>"]
 license = "{{ cookiecutter.license }}"
 readme = "README.md"
+packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
 python = "^{{ cookiecutter.python_version }}"
