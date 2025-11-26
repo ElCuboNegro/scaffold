@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(cookiecutter:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker ps:*)",
+      "Bash(poetry lock:*)",
+      "Bash(docker logs:*)"
     ],
     "deny": [],
     "ask": []
