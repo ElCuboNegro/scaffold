@@ -17,7 +17,7 @@ email-validator = "^2.1.0"
 {% if cookiecutter.use_postgresql == "yes" -%}
 sqlalchemy = "^2.0.25"
 alembic = "^1.13.0"
-asyncpg = "^0.29.0"
+asyncpg = "^0.30.0"
 {% endif -%}
 celery = "^5.3.4"
 {% if cookiecutter.use_redis == "yes" -%}
