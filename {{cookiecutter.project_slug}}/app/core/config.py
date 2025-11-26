@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     {% if cookiecutter.use_postgresql == "yes" -%}
     # Database
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/{{ cookiecutter.database_name }}"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/{{ cookiecutter.database_name }}"
     DATABASE_POOL_SIZE: int = 5
     DATABASE_MAX_OVERFLOW: int = 10
     {% endif %}
