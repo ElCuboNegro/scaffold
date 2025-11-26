@@ -197,11 +197,7 @@ docker build -t {{ cookiecutter.project_slug }}:latest .
 docker run -p 8000:8000 {{ cookiecutter.project_slug }}:latest
 ```
 
-### Docker Compose Production
 
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
 {% endif %}
 
 ### Environment Variables
