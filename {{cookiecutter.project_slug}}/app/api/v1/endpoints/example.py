@@ -1,8 +1,8 @@
 """Example endpoint demonstrating API structure."""
 
 from fastapi import APIRouter{% if cookiecutter.use_postgresql == "yes" %}, Depends, HTTPException, status
-from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.crud import example as crud
@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get("/", response_model={% if cookiecutter.use_postgresql == "yes" %}PaginatedResponse[ExampleResponse]{% else %}list[ExampleResponse]{% endif %})
 async def list_examples({% if cookiecutter.use_postgresql == "yes" %}
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
     name: str | None = None,
@@ -36,23 +36,31 @@ async def list_examples({% if cookiecutter.use_postgresql == "yes" %}
     """
     {% if cookiecutter.use_postgresql == "yes" -%}
     # Build query with optional filters
-    query = db.query(Example)
-    
+    query = select(Example)
+
     if name:
-        query = query.filter(Example.name.ilike(f"%{name}%"))
+        query = query.where(Example.name.ilike(f"%{name}%"))
     if description:
-        query = query.filter(Example.description.ilike(f"%{description}%"))
-    
+        query = query.where(Example.description.ilike(f"%{description}%"))
+
     # Get total count
-    total = query.count()
-    
+    count_query = select(func.count()).select_from(Example)
+    if name:
+        count_query = count_query.where(Example.name.ilike(f"%{name}%"))
+    if description:
+        count_query = count_query.where(Example.description.ilike(f"%{description}%"))
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
+
     # Get paginated items
-    items = query.offset(skip).limit(limit).all()
-    
+    query = query.offset(skip).limit(limit)
+    result = await db.execute(query)
+    items = result.scalars().all()
+
     # Calculate pagination metadata
     page = (skip // limit) + 1 if limit > 0 else 1
     pages = (total + limit - 1) // limit if limit > 0 else 1
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -72,7 +80,7 @@ async def list_examples({% if cookiecutter.use_postgresql == "yes" %}
 @router.post("/", response_model=ExampleResponse, status_code=201)
 async def create_example({% if cookiecutter.use_postgresql == "yes" %}
     *,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     example_in: ExampleCreate,{% else %}
     example_in: ExampleCreate,{% endif %}
 ) -> ExampleResponse:
@@ -86,7 +94,7 @@ async def create_example({% if cookiecutter.use_postgresql == "yes" %}
         Created example with generated ID
     """
     {% if cookiecutter.use_postgresql == "yes" -%}
-    return crud.create_example(db=db, example=example_in)
+    return await crud.create_example(db=db, example=example_in)
     {% else -%}
     # Fallback for non-database configuration
     return ExampleResponse(
@@ -100,7 +108,7 @@ async def create_example({% if cookiecutter.use_postgresql == "yes" %}
 @router.get("/{example_id}", response_model=ExampleResponse)
 async def get_example({% if cookiecutter.use_postgresql == "yes" %}
     example_id: int,
-    db: Session = Depends(get_db),{% else %}
+    db: AsyncSession = Depends(get_db),{% else %}
     example_id: int,{% endif %}
 ) -> ExampleResponse:
     """
@@ -116,7 +124,7 @@ async def get_example({% if cookiecutter.use_postgresql == "yes" %}
         HTTPException: 404 if example not found
     """
     {% if cookiecutter.use_postgresql == "yes" -%}
-    db_example = crud.get_example(db=db, example_id=example_id)
+    db_example = await crud.get_example(db=db, example_id=example_id)
     if not db_example:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -137,7 +145,7 @@ async def get_example({% if cookiecutter.use_postgresql == "yes" %}
 async def update_example({% if cookiecutter.use_postgresql == "yes" %}
     example_id: int,
     example_in: ExampleUpdate,
-    db: Session = Depends(get_db),{% else %}
+    db: AsyncSession = Depends(get_db),{% else %}
     example_id: int,
     example_in: ExampleUpdate,{% endif %}
 ) -> ExampleResponse:
@@ -155,7 +163,7 @@ async def update_example({% if cookiecutter.use_postgresql == "yes" %}
         HTTPException: 404 if example not found
     """
     {% if cookiecutter.use_postgresql == "yes" -%}
-    db_example = crud.update_example(db=db, example_id=example_id, example=example_in)
+    db_example = await crud.update_example(db=db, example_id=example_id, example=example_in)
     if not db_example:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -175,7 +183,7 @@ async def update_example({% if cookiecutter.use_postgresql == "yes" %}
 @router.delete("/{example_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_example({% if cookiecutter.use_postgresql == "yes" %}
     example_id: int,
-    db: Session = Depends(get_db),{% else %}
+    db: AsyncSession = Depends(get_db),{% else %}
     example_id: int,{% endif %}
 ) -> None:
     """
@@ -188,7 +196,7 @@ async def delete_example({% if cookiecutter.use_postgresql == "yes" %}
         HTTPException: 404 if example not found
     """
     {% if cookiecutter.use_postgresql == "yes" -%}
-    success = crud.delete_example(db=db, example_id=example_id)
+    success = await crud.delete_example(db=db, example_id=example_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

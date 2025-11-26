@@ -1,41 +1,44 @@
 {% if cookiecutter.use_postgresql == "yes" -%}
 """CRUD operations for Example model."""
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.example import Example
 from app.schemas.example import ExampleCreate, ExampleUpdate
 
 
-def get_example(db: Session, example_id: int) -> Example | None:
+async def get_example(db: AsyncSession, example_id: int) -> Example | None:
     """Get an example by ID."""
-    return db.query(Example).filter(Example.id == example_id).first()
+    result = await db.execute(select(Example).where(Example.id == example_id))
+    return result.scalar_one_or_none()
 
 
-def get_examples(db: Session, skip: int = 0, limit: int = 100) -> list[Example]:
+async def get_examples(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[Example]:
     """Get a list of examples."""
-    return db.query(Example).offset(skip).limit(limit).all()
+    result = await db.execute(select(Example).offset(skip).limit(limit))
+    return list(result.scalars().all())
 
 
-def create_example(db: Session, example: ExampleCreate) -> Example:
+async def create_example(db: AsyncSession, example: ExampleCreate) -> Example:
     """Create a new example."""
     db_example = Example(
         name=example.name,
         description=example.description,
     )
     db.add(db_example)
-    db.commit()
-    db.refresh(db_example)
+    await db.commit()
+    await db.refresh(db_example)
     return db_example
 
 
-def update_example(
-    db: Session,
+async def update_example(
+    db: AsyncSession,
     example_id: int,
     example: ExampleUpdate,
 ) -> Example | None:
     """Update an existing example."""
-    db_example = get_example(db, example_id)
+    db_example = await get_example(db, example_id)
     if not db_example:
         return None
 
@@ -43,19 +46,19 @@ def update_example(
     for field, value in update_data.items():
         setattr(db_example, field, value)
 
-    db.commit()
-    db.refresh(db_example)
+    await db.commit()
+    await db.refresh(db_example)
     return db_example
 
 
-def delete_example(db: Session, example_id: int) -> bool:
+async def delete_example(db: AsyncSession, example_id: int) -> bool:
     """Delete an example."""
-    db_example = get_example(db, example_id)
+    db_example = await get_example(db, example_id)
     if not db_example:
         return False
 
-    db.delete(db_example)
-    db.commit()
+    await db.delete(db_example)
+    await db.commit()
     return True
 {% else -%}
 """CRUD placeholder - PostgreSQL not enabled."""

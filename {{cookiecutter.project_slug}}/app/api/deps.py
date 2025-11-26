@@ -1,20 +1,14 @@
 """API dependency injection."""
 
 {% if cookiecutter.use_postgresql == "yes" -%}
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import SessionLocal
+from app.core.database import get_db as get_db_session
 
-
-def get_db() -> Generator[Session, None, None]:
-    """Dependency for database session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Re-export for convenience
+get_db = get_db_session
 {% else -%}
 # Database dependencies disabled - PostgreSQL not enabled
 {% endif %}
