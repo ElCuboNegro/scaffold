@@ -39,19 +39,10 @@ def main() -> None:
     except Exception:
         print("⚠️  Could not install pre-commit hooks. Run 'pre-commit install' manually.")
 
-    {% if cookiecutter.use_postgresql == "yes" -%}
-    # Create initial Alembic migration
-    print("\n📝 Creating initial database migration...")
-    try:
-        run_command(["alembic", "revision", "--autogenerate", "-m", "Initial migration"])
-    except Exception:
-        print("⚠️  Could not create initial migration. Run 'alembic revision --autogenerate -m \"Initial migration\"' manually.")
-    {% endif %}
-
     print("\n✨ Project setup complete!\n")
     print("Next steps:")
     print("  1. cd {{ cookiecutter.project_slug }}")
-    print("  2. poetry install  (or pip install -r requirements.txt)")
+    print("  2. poetry install")
     {% if cookiecutter.use_docker == "yes" -%}
     print("  3. docker-compose up -d")
     {% endif -%}
