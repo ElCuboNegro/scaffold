@@ -7,6 +7,11 @@ license = "{{ cookiecutter.license }}"
 readme = "README.md"
 packages = [{include = "app"}]
 
+{% if cookiecutter.use_postgresql == "yes" -%}
+[tool.poetry.scripts]
+init-db = "scripts.init_db:main"
+
+{% endif -%}
 [tool.poetry.dependencies]
 python = "^{{ cookiecutter.python_version }}"
 fastapi = "^0.115.0"
