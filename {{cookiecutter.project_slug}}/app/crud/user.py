@@ -1,29 +1,33 @@
 {% if cookiecutter.use_postgresql == "yes" and cookiecutter.include_auth == "yes" -%}
 """CRUD operations for User model."""
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
 from app.schemas.auth import UserCreate
 
 
-def get_user(db: Session, user_id: int) -> User | None:
+async def get_user(db: AsyncSession, user_id: int) -> User | None:
     """Get a user by ID."""
-    return db.query(User).filter(User.id == user_id).first()
+    result = await db.execute(select(User).filter(User.id == user_id))
+    return result.scalar_one_or_none()
 
 
-def get_user_by_email(db: Session, email: str) -> User | None:
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     """Get a user by email."""
-    return db.query(User).filter(User.email == email).first()
+    result = await db.execute(select(User).filter(User.email == email))
+    return result.scalar_one_or_none()
 
 
-def get_user_by_username(db: Session, username: str) -> User | None:
+async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
     """Get a user by username."""
-    return db.query(User).filter(User.username == username).first()
+    result = await db.execute(select(User).filter(User.username == username))
+    return result.scalar_one_or_none()
 
 
-def create_user(db: Session, user: UserCreate) -> User:
+async def create_user(db: AsyncSession, user: UserCreate) -> User:
     """Create a new user."""
     hashed_password = get_password_hash(user.password)
     db_user = User(
@@ -32,12 +36,12 @@ def create_user(db: Session, user: UserCreate) -> User:
         hashed_password=hashed_password,
     )
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     return db_user
 
 
-def authenticate_user(db: Session, username: str, password: str) -> User | None:
+async def authenticate_user(db: AsyncSession, username: str, password: str) -> User | None:
     """
     Authenticate a user by username/email and password.
 
@@ -50,16 +54,16 @@ def authenticate_user(db: Session, username: str, password: str) -> User | None:
         User if authentication successful, None otherwise
     """
     # Try to find user by username or email
-    user = get_user_by_username(db, username)
+    user = await get_user_by_username(db, username)
     if not user:
-        user = get_user_by_email(db, username)
-    
+        user = await get_user_by_email(db, username)
+
     if not user:
         return None
-    
+
     if not verify_password(password, user.hashed_password):
         return None
-    
+
     return user
 {% else -%}
 """User CRUD placeholder - PostgreSQL or Auth not enabled."""
